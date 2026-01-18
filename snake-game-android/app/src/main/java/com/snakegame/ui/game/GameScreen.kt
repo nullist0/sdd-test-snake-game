@@ -6,12 +6,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 
 /**
- * Main game screen composable with swipe gesture detection.
+ * Main game screen composable with swipe gesture detection and fruit rendering.
  *
  * Renders the game UI and handles swipe input for directional control.
  * Integrates SwipeGestureDetector modifier with GameViewModel for state management.
+ * Displays fruit using FruitRenderer when present.
  *
  * @param viewModel GameViewModel managing game state and direction changes
  * @param modifier Optional modifier for customization
@@ -23,6 +26,16 @@ fun GameScreen(
 ) {
     val gameState by viewModel.gameState.collectAsState()
 
+    // Calculate cell size based on grid dimensions
+    // Using screen dimensions and grid size (15x15 default)
+    val density = LocalDensity.current
+    val gridSize = 15 // TODO: get from viewModel or config
+    val cellSize = with(density) {
+        // This is a placeholder - actual cell size should be calculated from screen dimensions
+        // For now, using a fixed size for rendering
+        24.dp
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -30,11 +43,16 @@ fun GameScreen(
                 viewModel.handleDirectionInput(direction)
             }
     ) {
-        // TODO: Render snake, food, score, etc.
-        // For now, just a basic container with gesture detection
+        // Render fruit
+        FruitRenderer(
+            fruit = gameState.fruit,
+            cellSize = cellSize,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // TODO: Render other game elements
         // Future features will add:
-        // - SnakeRenderer(gameState.snake)
-        // - FoodRenderer(gameState.food)
+        // - SnakeRenderer(gameState.snake, cellSize)
         // - ScoreDisplay(gameState.score)
         // - GameOverOverlay(gameState.isGameOver)
     }

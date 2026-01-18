@@ -2,6 +2,10 @@ package com.snakegame.ui.game
 
 import androidx.lifecycle.ViewModel
 import com.snakegame.domain.model.Direction
+import com.snakegame.domain.model.Fruit
+import com.snakegame.domain.usecase.CalculateSpawnZoneUseCase
+import com.snakegame.domain.usecase.FindEmptyCellsUseCase
+import com.snakegame.domain.usecase.SpawnFruitUseCase
 import com.snakegame.domain.usecase.ValidateDirectionUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,13 +17,31 @@ import kotlinx.coroutines.flow.update
  *
  * Manages game state and handles player input with direction validation.
  * Uses ValidateDirectionUseCase to prevent reverse direction changes.
+ * Handles fruit spawning with strategic 3x3 tail-centered placement.
  */
-class GameViewModel : ViewModel() {
+class GameViewModel(
+    private val gridSize: Int = 15
+) : ViewModel() {
 
     private val validateDirection = ValidateDirectionUseCase()
+    private val spawnFruitUseCase = SpawnFruitUseCase(
+        calculateSpawnZone = CalculateSpawnZoneUseCase(),
+        findEmptyCells = FindEmptyCellsUseCase(),
+        gridWidth = gridSize,
+        gridHeight = gridSize
+    )
 
-    private val _gameState = MutableStateFlow(GameState.initial())
+    private val _gameState = MutableStateFlow(initialGameStateWithFruit())
     val gameState: StateFlow<GameState> = _gameState.asStateFlow()
+
+    /**
+     * Creates initial game state with spawned fruit.
+     */
+    private fun initialGameStateWithFruit(): GameState {
+        val baseState = GameState.initial(gridSize)
+        val fruitPosition = spawnFruitUseCase(baseState)
+        return baseState.copy(fruit = Fruit(fruitPosition))
+    }
 
     /**
      * Handles directional input from player (e.g., swipe gesture).

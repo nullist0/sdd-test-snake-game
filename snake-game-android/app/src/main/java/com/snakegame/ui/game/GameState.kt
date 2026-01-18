@@ -1,16 +1,19 @@
 package com.snakegame.ui.game
 
+import com.snakegame.domain.model.Fruit
 import com.snakegame.domain.model.Snake
 
 /**
  * Represents the complete game state.
  *
  * @property snake The current snake entity (position, body, direction)
+ * @property fruit The current fruit entity (null if no fruit present)
  * @property score The current score (snake length)
  * @property isGameOver Whether the game has ended
  */
 data class GameState(
     val snake: Snake,
+    val fruit: Fruit? = null,
     val score: Int = 0,
     val isGameOver: Boolean = false
 ) {

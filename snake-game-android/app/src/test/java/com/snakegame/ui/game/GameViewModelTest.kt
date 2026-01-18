@@ -1,6 +1,10 @@
 package com.snakegame.ui.game
 
 import com.snakegame.domain.model.Direction
+import com.snakegame.domain.model.Position
+import com.snakegame.domain.usecase.CalculateSpawnZoneUseCase
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -159,5 +163,74 @@ class GameViewModelTest {
         assertEquals(Direction.RIGHT, viewModel.gameState.value.snake.direction)
         assertEquals(initialState.snake.head, viewModel.gameState.value.snake.head)
         assertEquals(initialState.snake.body, viewModel.gameState.value.snake.body)
+    }
+
+    // === Feature 002: Fruit Spawning Tests ===
+
+    @Test
+    fun `initial fruit spawns on game start`() {
+        // Given: ViewModel initialized
+        // When: check initial game state
+        val gameState = viewModel.gameState.value
+
+        // Then: fruit should be present
+        assertNotNull("Initial fruit should spawn on game start", gameState.fruit)
+    }
+
+    @Test
+    fun `fruit spawns in 3x3 tail area`() {
+        // Given: ViewModel with initial state
+        val gameState = viewModel.gameState.value
+        val fruit = gameState.fruit
+
+        // Then: fruit should be spawned
+        assertNotNull("Fruit should be present", fruit)
+
+        // Get tail position (last body segment or head)
+        val tailPosition = gameState.snake.body.lastOrNull() ?: gameState.snake.head
+
+        // Calculate expected 3x3 zone
+        val calculateZone = CalculateSpawnZoneUseCase()
+        val expectedZone = calculateZone(
+            tailPosition,
+            gridWidth = 15, // default grid size from GameState.initial()
+            gridHeight = 15
+        )
+
+        // Fruit should be within 3x3 tail zone
+        assertTrue(
+            "Fruit should spawn in 3x3 tail zone, but was at ${fruit!!.position}",
+            fruit.position in expectedZone
+        )
+    }
+
+    @Test
+    fun `fruit position is within spawn zone`() {
+        // Given: ViewModel with initial state
+        val gameState = viewModel.gameState.value
+        val fruit = gameState.fruit
+
+        // Then: fruit position should be valid
+        assertNotNull("Fruit should be present", fruit)
+
+        val gridSize = 15 // default from GameState.initial()
+        assertTrue("Fruit X should be within bounds", fruit!!.position.x in 0 until gridSize)
+        assertTrue("Fruit Y should be within bounds", fruit.position.y in 0 until gridSize)
+    }
+
+    @Test
+    fun `fruit does not spawn on snake segments`() {
+        // Given: ViewModel with initial state
+        val gameState = viewModel.gameState.value
+        val fruit = gameState.fruit
+
+        // Then: fruit should not overlap with snake
+        assertNotNull("Fruit should be present", fruit)
+
+        val snakeSegments = listOf(gameState.snake.head) + gameState.snake.body
+        assertTrue(
+            "Fruit should not spawn on snake, but was at ${fruit!!.position}",
+            fruit.position !in snakeSegments
+        )
     }
 }
